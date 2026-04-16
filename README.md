@@ -1,4 +1,6 @@
-# Fraud Detection System
+
+This repository is our team’s independent working copy for continued development and updates.
+# Anti-Fraud-System
 ### Medical Insurance Claim Fraud Detection Using AI & Code Analysis
 **Cornell University Capstone  |  Shravani Poman  |  2026**
 
