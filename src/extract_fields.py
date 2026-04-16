@@ -283,8 +283,13 @@ def fix_ocr_errors(text):
         text = text.replace(amt, f'DOLLAR{i}PLACEHOLDER', 1)
 
     # Fix ICD-10 I-codes: 125.10 → I25.10, 110 → I10
+    # Only fix when followed by decimal (e.g. 125.10) or at end of word
+    # NOT when followed by space+letters (street addresses like "100 MAIN ST")
     text = re.sub(r'\b1(\d{2}\.\w{1,4})\b', r'I\1', text)
-    text = re.sub(r'(?<!\d)1(\d{2})(?!\d)', r'I\1', text)
+    # For standalone 3-digit I-codes (I10, I00), only fix when
+    # preceded by non-address context (after punctuation/newline/letter-dot-space)
+    text = re.sub(r'(?<=[A-L]\. )1(\d{2})(?!\d)(?! [A-Z])', r'I\1', text)
+    text = re.sub(r'(?<=[\n,;\t])1(\d{2})(?!\d)(?! [A-Z]{2,})', r'I\1', text)
 
     # Fix ICD-10 O-codes: 009.90 → O09.90
     text = re.sub(r'\b0(\d{2}\.\w{1,4})\b', r'O\1', text)
@@ -326,10 +331,17 @@ def extract_cpt_codes(text):
     codes.extend([c.upper() for c in re.findall(r"\b(\d{4}U)\b", cleaned, re.IGNORECASE)])
 
     # Filter years but KEEP duplicates — critical for duplicate billing detection
+    # Also remove codes that appear as part of account/policy numbers
+    # by checking their context in the original text
     result = []
     for code in codes:
         if code.isdigit() and 1900 <= int(code) <= 2099:
             continue  # Skip years
+        # Skip codes that appear after PAT-, ACCT, #, GRP-, UHC- etc.
+        # These are policy/account numbers not CPT codes
+        ctx_pattern = rf'(?:PAT|ACCT|GRP|UHC|NPI|SSN|EIN|FECA|TAX)[^A-Z]{{0,5}}{re.escape(code)}'
+        if re.search(ctx_pattern, cleaned, re.IGNORECASE):
+            continue
         result.append(code)
 
     return result
@@ -353,20 +365,17 @@ def extract_icd10_codes(text):
 
 def extract_total_charge(text):
     """Finds total charge amount. Used for upcoding detection."""
-    match = re.search(r"TOTAL\s+CHARGE[:\s]*\$?([\d,]+\.?\d*)", text, re.IGNORECASE)
+    # First priority: find amount specifically labelled as TOTAL CHARGE
+    match = re.search(r"TOTAL\s+CHARGE[^\d$]*\$?([\d,]+\.\d{2})", text, re.IGNORECASE)
     if match:
-        return float(match.group(1).replace(",", ""))
+        val = float(match.group(1).replace(",", ""))
+        if val > 0:
+            return val
+    # Second priority: largest dollar amount on the form (usually total charge)
     amounts = re.findall(r"\$([\d,]+\.\d{2})", text)
     if amounts:
         try:
-            return max(float(a.replace(",", "")) for a in amounts)
-        except ValueError:
-            pass
-    # Also look for patterns like "329 32" (dollars and cents without decimal)
-    amounts2 = re.findall(r"\b(\d{2,5})\s+(\d{2})\b", text)
-    if amounts2:
-        try:
-            values = [float(f"{d}.{c}") for d, c in amounts2 if int(c) < 100]
+            values = [float(a.replace(",", "")) for a in amounts if float(a.replace(",","")) > 0]
             if values:
                 return max(values)
         except ValueError:
