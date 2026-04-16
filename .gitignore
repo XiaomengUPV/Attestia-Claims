@@ -1,6 +1,5 @@
 data/pdfs/
 data/splits/
-data/raw_claims/claims.json
 __pycache__/
 *.pyc
 .env
