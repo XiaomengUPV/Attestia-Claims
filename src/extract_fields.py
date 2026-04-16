@@ -223,13 +223,11 @@ def extract_cpt_codes(text):
 def extract_icd10_codes(text):
     """Extracts ICD-10-CM diagnosis codes. Call fix_ocr_errors() first."""
     codes = re.findall(r"\b([A-Z]\d{2}(?:\.\w{1,4})?)\b", text, re.IGNORECASE)
-    seen = set()
     result = []
     for code in codes:
-        code_upper = code.upper()
-        if code_upper[0].isalpha() and code_upper not in seen:
-            seen.add(code_upper)
-            result.append(code_upper)
+        if code.isdigit() and 1900 <= int(code) <= 2099:
+            continue
+        result.append(code)
     return result
 
 

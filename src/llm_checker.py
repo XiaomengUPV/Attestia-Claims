@@ -41,7 +41,7 @@ LLM_DIR.mkdir(parents=True, exist_ok=True)
 # ── Change MODEL_FINAL for your final evaluation run ──────────────────────────
 MODEL_DEV   = "claude-haiku-4-5"    # cheap: ~$1.50 for 1300 claims
 MODEL_FINAL = "claude-sonnet-4-6"   # better: ~$5.00 for 1300 claims
-MODEL       = MODEL_FINAL            # ← change to MODEL_FINAL when ready
+MODEL       = MODEL_DEV             # ← change to MODEL_FINAL when ready
 
 RATE_LIMIT_DELAY = 0.1  # seconds between API calls to avoid rate limits
 
@@ -134,10 +134,12 @@ CMS 2026 MEDICARE FEE SCHEDULE (official allowed rates):
 {price_context}
 
 RULES:
-- Only flag if clinically implausible or price inflation is clear and significant
+- Flag clearly clinically implausible combinations with HIGH confidence — do not hesitate
+- A $3,000+ specialized oncology/genomic test (0026U, 0048U) on a routine wellness visit (Z00.00) is ALWAYS phantom billing
+- A cardiac catheterization or major surgery with a cold/infection diagnosis is ALWAYS a diagnosis mismatch
 - Legitimate claims bill 100-300% of Medicare rate — above 500% is suspicious
-- A false positive (flagging legitimate claim) is almost as bad as missing fraud
-- Err on the side of caution
+- If the CPT code is not in the fee schedule, use clinical judgment about the code-diagnosis relationship
+- Be decisive: clear clinical impossibilities should be HIGH confidence, not low
 
 Respond ONLY with this exact JSON format, no other text:
 {{

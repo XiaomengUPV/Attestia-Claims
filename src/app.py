@@ -196,7 +196,7 @@ def run_fraud_check(claim, rule_engine, llm_checker):
         return {"fraud_detected":True,"fraud_type":rule_result.get("fraud_type"),
                 "confidence":"High","explanation":rule_result.get("explanation",""),
                 "engine":"Rule Engine"}, rule_result, llm_result
-    elif lf and lc in ["high","medium"]:
+    elif lf and lc in ["high","medium","low"]:
         return {"fraud_detected":True,"fraud_type":llm_result.get("fraud_type"),
                 "confidence":lc.capitalize(),"explanation":llm_result.get("explanation",""),
                 "engine":"LLM Reasoning"}, rule_result, llm_result
