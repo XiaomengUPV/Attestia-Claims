@@ -45,6 +45,11 @@ from pathlib import Path   # for clean file path handling
 from collections import defaultdict  # for counting results
 
 # ── File paths ─────────────────────────────────────────────────────────────────
+# Which LLM confidence levels count as fraud:
+#   ("high",)          -> precision-leaning (fewer false positives)
+#   ("high", "medium") -> recall-leaning (fewer missed frauds)
+ACCEPTED_LLM_CONFIDENCE = ("high",)
+
 BASE_DIR      = Path(__file__).resolve().parent.parent
 PARSED_DIR    = BASE_DIR / "data" / "edi_parsed"      # original claim data
 RULE_DIR      = BASE_DIR / "data" / "rule_results"    # rule check results
@@ -123,7 +128,7 @@ def merge_results(claim_id, rule_result, llm_result, ground_truth):
         confidence  = "high"
 
     # Priority 2: LLM flagged with high or medium confidence
-    elif llm_fraud and llm_conf in ["high", "medium"]:
+    elif llm_fraud and llm_conf in ACCEPTED_LLM_CONFIDENCE:
         final_fraud = True
         final_type  = llm_type
         final_expl  = llm_expl

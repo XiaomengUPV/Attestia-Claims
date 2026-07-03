@@ -11,81 +11,75 @@
   ──────────────────────────────────────────────────────────
 
   Total Claims   : 1,300
-  Precision      : 0.937  (93.7% of fraud flags were correct)
-  Recall         : 0.944  (caught 94.4% of all real fraud)
-  F1 Score       : 0.941  ✅ TARGET MET (≥0.75)
-  Accuracy       : 0.918
+  Precision      : 0.980  (98.0% of fraud flags were correct)
+  Recall         : 0.869  (caught 86.9% of all real fraud)
+  F1 Score       : 0.921  ✅ TARGET MET (≥0.75)
+  Accuracy       : 0.897
 
   Confusion Matrix:
-    True Positives  :   850  ← real fraud correctly caught
-    False Positives :    57  ← legitimate wrongly flagged
-    True Negatives  :   343  ← legitimate correctly cleared
-    False Negatives :    50  ← real fraud missed
+    True Positives  :   782  ← real fraud correctly caught
+    False Positives :    16  ← legitimate wrongly flagged
+    True Negatives  :   384  ← legitimate correctly cleared
+    False Negatives :   118  ← real fraud missed
 
   PER FRAUD TYPE PERFORMANCE
   ──────────────────────────────────────────────────────────
 
   Fraud Type                     N   Det  Miss   Prec    Rec     F1 Status
   ────────────────────────── ───── ───── ───── ────── ────── ────── ────────
-  Code Padding                 100   100     0  1.000  1.000  1.000 ✅ MET
-  Code Substitution            100    78    22  0.655  0.780  0.712 ⚠️  MISS
-  Diagnosis Mismatch           120   120     0  0.566  1.000  0.723 ⚠️  MISS
+  Code Padding                 100    90    10  1.000  0.900  0.947 ✅ MET
+  Code Substitution            100    78    22  0.780  0.780  0.780 ✅ MET
+  Diagnosis Mismatch           120   120     0  0.659  1.000  0.795 ✅ MET
   Duplicate Billing             80    80     0  1.000  1.000  1.000 ✅ MET
   Modifier Abuse (-59)         100   100     0  1.000  1.000  1.000 ✅ MET
   Phantom Billing              100   100     0  0.637  1.000  0.778 ✅ MET
   Screening Code Abuse          80    80     0  0.602  1.000  0.751 ✅ MET
   Unbundling                   100   100     0  0.794  1.000  0.885 ✅ MET
-  Upcoding                     120    92    28  0.814  0.767  0.790 ✅ MET
+  Upcoding                     120    34    86  1.000  0.283  0.442 ⚠️  MISS
 
   FALSE NEGATIVE ANALYSIS (fraud we missed)
   ──────────────────────────────────────────────────────────
 
-  Total fraud missed : 50
+  Total fraud missed : 118
   (a missed claim was, by definition, cleared by both engines)
 
   Missed by fraud type:
-    Upcoding                       28 missed  (23% of that type)
+    Upcoding                       86 missed  (72% of that type)
     Code Substitution              22 missed  (22% of that type)
+    Code Padding                   10 missed  (10% of that type)
 
   FALSE POSITIVE ANALYSIS (legitimate claims we wrongly flagged)
   ──────────────────────────────────────────────────────────
 
-  Total wrongly flagged : 57
+  Total wrongly flagged : 16
 
   By predicted fraud type:
-    Upcoding                       21
-    Diagnosis Mismatch             15
-    Code Substitution              13
+    Diagnosis Mismatch              8
     Screening Code Abuse            8
 
   By engine:
-    llm_claude                     49
+    llm_claude                      8
     rule_engine                     8
 
   IMPROVEMENT RECOMMENDATIONS
   ──────────────────────────────────────────────────────────
 
-  Code Substitution (F1=0.712):
-    → Very subtle fraud — non-covered code swapped for covered.
-      LLM cannot easily detect this without coverage data.
-    → Improve: add a coverage lookup table mapping non-covered
-      codes to their covered substitutes.
-
-  Diagnosis Mismatch (F1=0.723):
-    → High recall (finding many) but low precision (false alarms).
-    → Improve: tighten the prompt to require stronger evidence
-      before flagging — two-step check: is there ANY valid link?
+  Upcoding (F1=0.442):
+    → The LLM is flagging upcoding but fraud_type label
+      mismatches (e.g. flagged as Diagnosis Mismatch).
+    → Improve: refine prompt to distinguish upcoding from
+      diagnosis mismatch more explicitly.
 
 
   SUMMARY
   ──────────────────────────────────────────────────────────
 
-  Overall F1 : 0.941  ✅ PASS
-  Types met  : 7 / 9
-  Types below: 2 / 9
+  Overall F1 : 0.921  ✅ PASS
+  Types met  : 8 / 9
+  Types below: 1 / 9
 
-  Strongest fraud types: Code Padding (F1=1.00), Duplicate Billing (F1=1.00), Modifier Abuse (-59) (F1=1.00).
-  Weakest fraud types  : Diagnosis Mismatch (F1=0.72), Code Substitution (F1=0.71) — see
+  Strongest fraud types: Duplicate Billing (F1=1.00), Modifier Abuse (-59) (F1=1.00), Code Padding (F1=0.95).
+  Weakest fraud types  : Upcoding (F1=0.44) — see
   improvement recommendations above.
 
 ============================================================

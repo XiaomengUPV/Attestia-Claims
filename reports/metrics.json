@@ -1,44 +1,44 @@
 {
   "binary": {
     "total": 1300,
-    "tp": 850,
-    "fp": 57,
-    "fn": 50,
-    "tn": 343,
-    "precision": 0.937,
-    "recall": 0.944,
-    "f1": 0.941,
-    "accuracy": 0.918
+    "tp": 782,
+    "fp": 16,
+    "fn": 118,
+    "tn": 384,
+    "precision": 0.98,
+    "recall": 0.869,
+    "f1": 0.921,
+    "accuracy": 0.897
   },
   "per_fraud_type": {
     "Code Padding": {
       "true_count": 100,
-      "tp": 100,
+      "tp": 90,
       "fp": 0,
-      "fn": 0,
+      "fn": 10,
       "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
-      "detection_rate": 1.0
+      "recall": 0.9,
+      "f1": 0.947,
+      "detection_rate": 0.9
     },
     "Code Substitution": {
       "true_count": 100,
       "tp": 78,
-      "fp": 41,
+      "fp": 22,
       "fn": 22,
-      "precision": 0.655,
+      "precision": 0.78,
       "recall": 0.78,
-      "f1": 0.712,
+      "f1": 0.78,
       "detection_rate": 0.78
     },
     "Diagnosis Mismatch": {
       "true_count": 120,
       "tp": 120,
-      "fp": 92,
+      "fp": 62,
       "fn": 0,
-      "precision": 0.566,
+      "precision": 0.659,
       "recall": 1.0,
-      "f1": 0.723,
+      "f1": 0.795,
       "detection_rate": 1.0
     },
     "Duplicate Billing": {
@@ -93,35 +93,34 @@
     },
     "Upcoding": {
       "true_count": 120,
-      "tp": 92,
-      "fp": 21,
-      "fn": 28,
-      "precision": 0.814,
-      "recall": 0.767,
-      "f1": 0.79,
-      "detection_rate": 0.767
+      "tp": 34,
+      "fp": 0,
+      "fn": 86,
+      "precision": 1.0,
+      "recall": 0.283,
+      "f1": 0.442,
+      "detection_rate": 0.283
     }
   },
   "false_negatives": {
-    "total_missed": 50,
+    "total_missed": 118,
     "by_fraud_type": {
-      "Upcoding": 28,
-      "Code Substitution": 22
+      "Upcoding": 86,
+      "Code Substitution": 22,
+      "Code Padding": 10
     },
-    "rule_missed": 50,
+    "rule_missed": 118,
     "llm_missed": 50,
     "both_missed": 50
   },
   "false_positives": {
-    "total_wrongly_flagged": 57,
+    "total_wrongly_flagged": 16,
     "by_predicted_type": {
-      "Upcoding": 21,
-      "Diagnosis Mismatch": 15,
-      "Code Substitution": 13,
+      "Diagnosis Mismatch": 8,
       "Screening Code Abuse": 8
     },
     "by_engine": {
-      "llm_claude": 49,
+      "llm_claude": 8,
       "rule_engine": 8
     }
   }
