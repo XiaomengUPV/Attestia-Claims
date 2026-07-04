@@ -132,7 +132,9 @@ Anti-Fraud-System/
 │   ├── llm_checker.py        # Step 4B: Claude API reasoning (5 types)
 │   ├── fraud_engine.py       # Step 4C: Merge rule + LLM results
 │   ├── evaluate.py           # Step 5: Precision, recall, F1 per fraud type
-│   └── app.py                # Step 6: Streamlit demo dashboard
+│   └── api.py                # Step 6: Attestia Claims — FastAPI backend
+├── static/
+│   └── index.html            # Attestia Claims — single-page review console
 ├── data/
 │   ├── raw_claims/           # JSON claims + CSV summary
 │   ├── pdfs/                 # CMS-1500 PDF files (1,300)
@@ -164,7 +166,7 @@ Anti-Fraud-System/
 | 4B | `llm_checker.py` | ✅ Complete | Claude API reasoning layer (5 types) |
 | 4C | `fraud_engine.py` | ✅ Complete | Merges rule + LLM results into final verdicts |
 | 5 | `evaluate.py` | ✅ Complete | Precision, recall, F1 — see `reports/` |
-| 6 | `app.py` (Streamlit) | ✅ Complete | Upload PDF or EDI → get fraud verdict |
+| 6 | Attestia Claims (`api.py` + `static/`) | ✅ Complete | FastAPI + SPA review console: browse claims, upload EDI → verdict |
 
 ---
 
@@ -214,8 +216,9 @@ python3 src/llm_checker.py       # Step 4B: LLM reasoning layer
 python3 src/fraud_engine.py      # Step 4C: merge into final verdicts
 python3 src/evaluate.py          # Step 5: precision / recall / F1 report
 
-# 4. Launch the demo dashboard
-streamlit run src/app.py
+# 4. Launch the Attestia Claims review console
+python src/api.py
+# -> open http://localhost:8600
 ```
 
 ---

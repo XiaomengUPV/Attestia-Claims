@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attestia Claims — fraud review console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAFAF7; --sheet:#FFFFFF; --ink:#1C2430; --muted:#5A6B7E;
+  --scarlet:#D6402B; --scarlet-tint:#F7E7E2; --clear:#1F7A6D; --clear-tint:#E4F0ED;
+  --rule:#E4E0D6; --field:#FCFBF8;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,sans-serif;
+  --disp:"Archivo",var(--sans);
+}
+*{box-sizing:border-box;margin:0}
+html{scrollbar-gutter:stable}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--scarlet);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── Top bar ── */
+header{display:flex;align-items:center;gap:22px;padding:14px 26px;background:var(--sheet);
+  border-bottom:2px solid var(--ink);flex-wrap:wrap}
+.wordmark{display:flex;align-items:center;gap:11px;font-family:var(--disp)}
+.wordmark .mark{width:26px;height:26px;background:var(--scarlet);position:relative;flex:none}
+.wordmark .mark::after{content:"";position:absolute;inset:5px;border:2px solid var(--paper)}
+.wordmark b{font-size:19px;font-weight:700;letter-spacing:.14em}
+.wordmark span{color:var(--scarlet);font-weight:600;letter-spacing:.14em;font-size:19px}
+.status{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.pill{font:500 11px/1 var(--mono);letter-spacing:.06em;padding:7px 10px;border:1px solid var(--rule);
+  background:var(--field);color:var(--muted);display:flex;gap:7px;align-items:center}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:#B9B4A6}
+.pill.on .dot{background:var(--clear)}
+.pill.off .dot{background:var(--scarlet)}
+.pill em{font-style:normal;color:var(--ink)}
+
+/* ── Tabs ── */
+nav{display:flex;gap:2px;padding:0 26px;background:var(--sheet);border-bottom:1px solid var(--rule)}
+nav button{border:0;background:none;padding:12px 16px;font:600 13px var(--disp);
+  letter-spacing:.08em;color:var(--muted);border-bottom:3px solid transparent;text-transform:uppercase}
+nav button.active{color:var(--ink);border-bottom-color:var(--scarlet)}
+
+main{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:0;min-height:calc(100vh - 120px)}
+@media (max-width:980px){main{grid-template-columns:1fr}.sheetcol{border-left:0!important}}
+
+/* ── Register ── */
+.register{padding:22px 26px}
+.controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.controls input,.controls select{font:14px var(--sans);padding:9px 12px;border:1px solid var(--rule);
+  background:var(--sheet);color:var(--ink);min-width:120px}
+.controls input{flex:1;min-width:220px}
+.count{font:12px var(--mono);color:var(--muted);align-self:center}
+table{width:100%;border-collapse:collapse;background:var(--sheet);border:1px solid var(--rule)}
+th{font:600 10.5px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:9px 12px;border-bottom:2px solid var(--ink);background:var(--field)}
+td{padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr.sel{background:var(--scarlet-tint)}
+.cid{font:500 13px var(--mono)}
+.code{font:12px var(--mono);background:var(--field);border:1px solid var(--rule);
+  padding:1px 5px;margin:0 3px 3px 0;display:inline-block;white-space:nowrap}
+.amt{font:13px var(--mono);text-align:right;white-space:nowrap}
+.lbl{font:11px var(--mono);color:var(--muted)}
+.more{margin:14px auto;display:block;padding:9px 22px;background:none;
+  border:1px solid var(--ink);font:600 12px var(--disp);letter-spacing:.08em}
+.more:hover{background:var(--ink);color:var(--paper)}
+
+/* ── Claim sheet ── */
+.sheetcol{border-left:1px solid var(--rule);background:var(--sheet);padding:22px;position:relative}
+.sheetcol .empty{color:var(--muted);font-size:14px;padding:40px 10px;text-align:center}
+.formhead{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:14px}
+.formhead h2{font:700 15px var(--disp);letter-spacing:.1em}
+.formhead .fno{font:11px var(--mono);color:var(--scarlet);letter-spacing:.08em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fieldbox{border:1px solid var(--rule);background:var(--field);padding:7px 10px}
+.fieldbox.wide{grid-column:1/-1}
+.fieldbox label{display:block;font:600 9.5px var(--mono);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--scarlet);margin-bottom:2px}
+.fieldbox div{font-size:13.5px;word-break:break-word}
+.fieldbox .mono{font:13px var(--mono)}
+.runbtn{width:100%;margin-top:14px;padding:13px;background:var(--scarlet);color:#fff;border:0;
+  font:700 13px var(--disp);letter-spacing:.14em;text-transform:uppercase}
+.runbtn:hover{background:#B93521}
+.runbtn:disabled{background:var(--muted);cursor:wait}
+
+/* ── Verdict stamp: the signature ── */
+.stampwrap{margin:20px 0 8px;display:flex;justify-content:center}
+.stamp{--c:var(--scarlet);transform:rotate(-4deg);border:3px solid var(--c);color:var(--c);
+  padding:9px 20px 7px;text-align:center;font-family:var(--disp);position:relative;
+  animation:press .18s ease-out;background:
+    repeating-linear-gradient(35deg,transparent 0 3px,rgba(255,255,255,.28) 3px 4px)}
+.stamp.clear{--c:var(--clear)}
+.stamp b{display:block;font-size:21px;font-weight:700;letter-spacing:.2em}
+.stamp span{font:500 10px var(--mono);letter-spacing:.14em}
+@keyframes press{from{transform:rotate(-4deg) scale(1.4);opacity:0}to{transform:rotate(-4deg) scale(1);opacity:1}}
+.explain{border-left:3px solid var(--rule);padding:8px 12px;margin-top:12px;font-size:13.5px;color:var(--ink)}
+.enginenote{margin-top:10px;font:11px var(--mono);color:var(--muted)}
+details{margin-top:10px;border:1px solid var(--rule)}
+details summary{font:600 11px var(--mono);letter-spacing:.08em;padding:8px 10px;
+  cursor:pointer;background:var(--field);text-transform:uppercase;color:var(--muted)}
+details pre{font:11.5px/1.5 var(--mono);padding:10px;overflow:auto;max-height:220px}
+
+/* ── Submit ── */
+.submit{padding:34px 26px;max-width:640px}
+.submit h2{font:700 17px var(--disp);letter-spacing:.1em;margin-bottom:6px}
+.submit p{color:var(--muted);font-size:14px;margin-bottom:18px}
+.drop{border:2px dashed var(--rule);background:var(--sheet);padding:38px;text-align:center}
+.drop.hot{border-color:var(--scarlet);background:var(--scarlet-tint)}
+.drop input{display:none}
+.droplbl{font:600 13px var(--disp);letter-spacing:.06em;color:var(--ink)}
+.droplbl u{color:var(--scarlet);cursor:pointer;text-decoration-thickness:2px}
+.filemeta{font:12px var(--mono);color:var(--muted);margin-top:8px}
+.err{border:1px solid var(--scarlet);background:var(--scarlet-tint);color:var(--ink);
+  padding:10px 12px;font-size:13.5px;margin-top:14px}
+.uploadsheet{margin-top:22px}
+footer{padding:16px 26px;border-top:1px solid var(--rule);font:11px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark"><div class="mark" aria-hidden="true"></div><b>ATTESTIA</b><span>CLAIMS</span></div>
+  <div class="status" id="status"></div>
+</header>
+
+<nav>
+  <button class="active" data-tab="register">Claim register</button>
+  <button data-tab="submit">Submit a claim</button>
+</nav>
+
+<main id="tab-register">
+  <section class="register">
+    <div class="controls">
+      <input id="search" type="search" placeholder="Search claim ID, patient, provider, or code" aria-label="Search claims">
+      <select id="ftype" aria-label="Filter by dataset label"><option value="">All labels</option></select>
+      <span class="count" id="count"></span>
+    </div>
+    <table aria-label="Claims register">
+      <thead><tr><th>Claim</th><th>Date</th><th>Patient</th><th>Codes</th><th style="text-align:right">Billed</th><th>Dataset label</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <button class="more" id="more" hidden>Load 40 more</button>
+  </section>
+  <aside class="sheetcol" id="sheet" aria-live="polite">
+    <div class="empty">Select a claim from the register to open its review sheet.</div>
+  </aside>
+</main>
+
+<main id="tab-submit" hidden style="grid-template-columns:1fr">
+  <section class="submit">
+    <h2>SUBMIT A CLAIM FOR REVIEW</h2>
+    <p>Drop an EDI 837P file. Attestia parses it, runs the deterministic rule checks, and — when AI reasoning is enabled — the clinical-consistency analysis.</p>
+    <div class="drop" id="drop">
+      <input type="file" id="file" accept=".edi">
+      <div class="droplbl">Drag an .edi file here, or <u id="browse" role="button" tabindex="0">browse</u></div>
+      <div class="filemeta" id="filemeta">Sample files live in data/edi/</div>
+    </div>
+    <div id="uperr"></div>
+    <div class="uploadsheet" id="uploadsheet"></div>
+  </section>
+</main>
+
+<footer>ATTESTIA CLAIMS · rule engine + LLM reasoning over CMS-1500 / EDI 837P · synthetic evaluation data · Cornell University</footer>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>"$"+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+let offset=0,selRow=null,META={};
+
+/* ── boot ── */
+async function boot(){
+  META=await (await fetch("/api/meta")).json();
+  const m=META.metrics;
+  $("#status").innerHTML=
+    pill(META.rule_engine,"RULES",META.rule_engine?"ready":"down")+
+    pill(META.llm_enabled,"AI",META.llm_enabled?"enabled":"off")+
+    `<span class="pill"><span class="dot" style="background:var(--ink)"></span>POLICY <em>${esc(META.confidence_policy.join("+"))}</em></span>`+
+    (m&&m.f1?`<span class="pill"><span class="dot" style="background:var(--scarlet)"></span>EVAL F1 <em>${m.f1.toFixed(3)}</em></span>`:"");
+  META.fraud_types.forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t;$("#ftype").append(o)});
+  loadRows(true);
+}
+const pill=(on,k,v)=>`<span class="pill ${on?"on":"off"}"><span class="dot"></span>${k} <em>${esc(v)}</em></span>`;
+
+/* ── register ── */
+async function loadRows(reset){
+  if(reset){offset=0;$("#rows").innerHTML=""}
+  const q=new URLSearchParams({search:$("#search").value,ftype:$("#ftype").value,offset,limit:40});
+  const d=await (await fetch("/api/claims?"+q)).json();
+  $("#count").textContent=d.total.toLocaleString()+" claims";
+  for(const r of d.rows){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td class="cid">${esc(r.claim_id)}</td><td class="lbl">${esc(r.date)}</td>
+      <td>${esc(r.patient)}</td><td>${r.codes.map(c=>`<span class="code">${esc(c)}</span>`).join("")}</td>
+      <td class="amt">${money(r.total)}</td><td class="lbl">${esc(r.label)}</td>`;
+    tr.onclick=()=>{selRow?.classList.remove("sel");selRow=tr;tr.classList.add("sel");openSheet(r.claim_id)};
+    $("#rows").append(tr);
+  }
+  offset+=d.rows.length;
+  $("#more").hidden=offset>=d.total;
+}
+$("#search").addEventListener("input",()=>loadRows(true));
+$("#ftype").addEventListener("change",()=>loadRows(true));
+$("#more").onclick=()=>loadRows(false);
+
+/* ── claim sheet ── */
+function sheetHTML(c,idsuffix=""){
+  return `<div class="formhead"><h2>CLAIM REVIEW SHEET</h2><span class="fno">${esc(c.claim_id)}</span></div>
+  <div class="grid">
+    <div class="fieldbox"><label>Patient</label><div>${esc((c.patient&&c.patient.name)||c.patient_name||"—")}</div></div>
+    <div class="fieldbox"><label>Provider</label><div>${esc((c.provider&&c.provider.name)||c.provider_name||"—")}</div></div>
+    <div class="fieldbox"><label>Service date</label><div class="mono">${esc(c.date)}</div></div>
+    <div class="fieldbox"><label>Total billed</label><div class="mono">${money(c.total_charge)}</div></div>
+    <div class="fieldbox wide"><label>Procedures (CPT/HCPCS)</label>
+      <div>${(c.procedure_codes||[]).map((p,i)=>`<span class="code" title="${esc((c.procedure_descs||[])[i]||"")}">${esc(p)}${c.modifiers&&c.modifiers[i]?" "+esc(c.modifiers[i]):""}</span>`).join("")||"—"}</div></div>
+    <div class="fieldbox wide"><label>Diagnoses (ICD-10)</label>
+      <div>${(c.diagnosis_codes||[]).map((d,i)=>`<span class="code" title="${esc((c.diagnosis_descs||[])[i]||"")}">${esc(d)}</span>`).join("")||"—"}</div></div>
+    <div class="fieldbox wide"><label>Line charges</label>
+      <div class="mono">${(c.line_charges||[]).map(money).join(" · ")||"—"}</div></div>
+  </div>
+  <button class="runbtn" id="run${idsuffix}">Run analysis</button>
+  <div id="verdict${idsuffix}"></div>`;
+}
+function verdictHTML(v,rule,llm){
+  const flagged=v.fraud_detected;
+  const stamp=flagged
+    ?`<div class="stamp"><b>FLAGGED</b><span>${esc((v.fraud_type||"FRAUD").toUpperCase())} · ${esc(v.confidence.toUpperCase())} CONFIDENCE</span></div>`
+    :`<div class="stamp clear"><b>CLEAR</b><span>NO FRAUD INDICATORS</span></div>`;
+  const eng=v.engine==="rule_engine"?"Decided by: rule engine (deterministic)":
+            v.engine==="llm_claude"?"Decided by: AI reasoning (Claude)":"Decided by: rules + AI, combined policy";
+  let raw="";
+  if(rule)raw+=`<details><summary>Rule engine output</summary><pre>${esc(JSON.stringify(rule,null,2))}</pre></details>`;
+  if(llm)raw+=`<details><summary>AI reasoning output</summary><pre>${esc(JSON.stringify(llm,null,2))}</pre></details>`;
+  return `<div class="stampwrap">${stamp}</div>
+    <div class="explain">${esc(v.explanation)}</div>
+    <div class="enginenote">${eng}</div>${raw}`;
+}
+async function openSheet(cid){
+  const c=await (await fetch("/api/claims/"+cid)).json();
+  $("#sheet").innerHTML=sheetHTML(c);
+  $("#run").onclick=async()=>{
+    $("#run").disabled=true;$("#run").textContent="Analyzing…";
+    try{
+      const r=await fetch("/api/analyze/"+cid,{method:"POST"});
+      const d=await r.json();
+      $("#verdict").innerHTML=verdictHTML(d.verdict,d.rule_result,d.llm_result);
+    }catch(e){$("#verdict").innerHTML=`<div class="err">Analysis failed: ${esc(e)}</div>`}
+    $("#run").disabled=false;$("#run").textContent="Run analysis";
+  };
+}
+
+/* ── tabs ── */
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));
+  $("#tab-register").hidden=b.dataset.tab!=="register";
+  $("#tab-submit").hidden=b.dataset.tab!=="submit";
+});
+
+/* ── upload ── */
+const drop=$("#drop"),fileInput=$("#file");
+$("#browse").onclick=()=>fileInput.click();
+$("#browse").onkeydown=e=>{if(e.key==="Enter"||e.key===" ")fileInput.click()};
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("hot")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("hot")}));
+drop.addEventListener("drop",e=>{if(e.dataTransfer.files[0])sendFile(e.dataTransfer.files[0])});
+fileInput.onchange=()=>{if(fileInput.files[0])sendFile(fileInput.files[0])};
+async function sendFile(f){
+  $("#filemeta").textContent=f.name+" · "+(f.size/1024).toFixed(1)+" KB";
+  $("#uperr").innerHTML="";$("#uploadsheet").innerHTML="";
+  const fd=new FormData();fd.append("file",f);
+  const r=await fetch("/api/upload",{method:"POST",body:fd});
+  const d=await r.json();
+  if(!r.ok){$("#uperr").innerHTML=`<div class="err">${esc(d.detail||"Upload failed.")}</div>`;return}
+  $("#uploadsheet").innerHTML=sheetHTML(d.claim,"U");
+  $("#runU").hidden=true; /* analysis already ran server-side on upload */
+  $("#verdictU").innerHTML=verdictHTML(d.verdict,d.rule_result,d.llm_result);
+}
+
+boot();
+</script>
+</body>
+</html>
